@@ -1,4 +1,4 @@
-package product;
+package resolver;
 
 import java.io.IOException;
 import java.util.List;
