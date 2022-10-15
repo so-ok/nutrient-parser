@@ -15,7 +15,7 @@ class ProductResolverTest {
 
 	@Test
 	void resolve_from_response() {
-		JsonArrayResolver productResolver = new JsonArrayResolver(SAMPLE_PRODUCT_JSON);
+		JsonArrayResolver<Product> productResolver = new JsonArrayResolver<>(SAMPLE_PRODUCT_JSON, Product.class);
 		List<Product> products = productResolver.getList();
 
 		assertThat(products).contains(PRODUCT_TERA_SLEEP);

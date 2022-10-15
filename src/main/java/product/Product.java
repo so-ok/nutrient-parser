@@ -68,4 +68,15 @@ public class Product {
 		result = 31 * result + manufacturer.hashCode();
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "Product{" +
+			"ledgerNumber=" + ledgerNumber +
+			", reportNumber=" + reportNumber +
+			", name='" + name + '\'' +
+			", registerDate='" + registerDate + '\'' +
+			", manufacturer='" + manufacturer + '\'' +
+			'}';
+	}
 }

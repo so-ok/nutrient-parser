@@ -7,18 +7,18 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonArrayResolver {
+public class JsonArrayResolver<T> {
 
-	private final List<Product> objects;
+	private final List<T> objects;
 
-	public JsonArrayResolver(String response) {
-		this.objects = resolve(response);
+	public JsonArrayResolver(String response, Class<T> targetClass) {
+		this.objects = resolve(response, targetClass);
 	}
 
-	private List<Product> resolve(String response) {
+	private List<T> resolve(String response, Class<T> targetClass) {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
-			return objectMapper.readerForListOf(Product.class).readValue(response);
+			return objectMapper.readerForListOf(targetClass).readValue(response);
 		} catch (JsonMappingException e) {
 			throw new RuntimeException(e);
 		} catch (JsonParseException e) {
@@ -28,7 +28,7 @@ public class JsonArrayResolver {
 		}
 	}
 
-	public List<Product> getList() {
+	public List<T> getList() {
 		return objects;
 	}
 }
