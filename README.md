@@ -1,4 +1,5 @@
 # 쏘옼 영양제 파서(크롤러)
+![빌드](https://img.shields.io/github/workflow/status/so-ok/nutrient-parser/Build%20&%20Check)
 
 ## ☑️ 기능 목록
 
