@@ -17,7 +17,7 @@ class ResolverTest {
 	private static final Product PRODUCT_TERA_SLEEP = new Product(2022021000416566L, 200400200082583L,
 		"수면엔 테라슬립 락티움 제트 솔루션 ZZZ", "20221014", "주식회사 노바렉스");
 
-	private static final List<String> TERA_SLEEP_FUNCTIONAL_INGREDIENT_NAMES = List.of("테아닌", "비타민 B6", "유단백가수분해물");
+	private static final List<String> TERA_SLEEP_FUNCTIONAL_INGREDIENT_NAMES = List.of("L-테아닌", "비타민 B6", "유단백가수분해물");
 
 	@Test
 	void resolve_products_from_response() {
