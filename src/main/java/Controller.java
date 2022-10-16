@@ -15,31 +15,51 @@ import resolver.JsonArrayResolver;
 public class Controller {
 
 	private static final Sender sender = new Sender();
+	private static final List<Thread> threads = new ArrayList<>();
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws InterruptedException {
 		List<Product> products = new ArrayList<>();
 		Map<Product, List<Ingredient>> ingredients = new HashMap<>();
 		Map<Product, Information> informations = new HashMap<>();
 
-		int pageSize = 5;
-		int totalItemCount = 10;
+		int pageSize = 100;
+		int totalItemCount = 1000;
 		for (int i = 1, page = 1; i <= totalItemCount; i += pageSize, page++) {
 			List<Product> resolvedProducts = getProducts(page, pageSize);
 			products.addAll(resolvedProducts);
-			int aaaaa = 1;
+
 			for (Product product : resolvedProducts) {
+				Runnable ingredientFetcher = () -> {
+					List<Ingredient> resolvedIngredients = getIngredientsFor(product);
+					ingredients.put(product, resolvedIngredients);
+				};
+				Runnable informationFetcher = () -> {
+					Information information = getInformationFor(product);
+					informations.put(product, information);
+				};
 
-				List<Ingredient> resolvedIngredients = getIngredientsFor(product);
-				ingredients.put(product, resolvedIngredients);
-
-				Information information = getInformationFor(product);
-				informations.put(product, information);
-
-				System.out.println(aaaaa++ + " of " + pageSize + " done" + " ("+ page + "/"+ totalItemCount/pageSize +")");
+				runAsThread(ingredientFetcher);
+				runAsThread(informationFetcher);
+				System.out.printf("%d requested (%d/%d)\n", product.getReportNumber(), page, totalItemCount / pageSize);
 			}
+			joinThreads();
+			threads.clear();
 		}
 
+		joinThreads();
 		printProducts(products, ingredients, informations);
+	}
+
+	private static void joinThreads() throws InterruptedException {
+		for (Thread thread : threads) {
+			thread.join();
+		}
+	}
+
+	private static void runAsThread(Runnable ingredientRunner) {
+		Thread thread = new Thread(ingredientRunner);
+		threads.add(thread);
+		thread.start();
 	}
 
 	private static void printProducts(List<Product> products, Map<Product, List<Ingredient>> ingredients,
@@ -70,7 +90,9 @@ public class Controller {
 			return resolver.getList();
 		} catch (Exception e) {
 			System.err.printf("error in: getIngredientsFor(%s), retry\n", product.getName());
-			return getIngredientsFor(product);
+			List<Ingredient> result = getIngredientsFor(product);
+			System.err.printf("getIngredientsFor(%s) retry success\n", product.getName());
+			return result;
 		}
 	}
 
@@ -82,7 +104,9 @@ public class Controller {
 			return new InformationMapAdapter(map);
 		} catch (Exception e) {
 			System.err.printf("error in: getInformationFor(%s), retry\n", product.getName());
-			return getInformationFor(product);
+			Information result = getInformationFor(product);
+			System.err.printf("getInformationFor(%s) retry success\n", product.getName());
+			return result;
 		}
 	}
 
