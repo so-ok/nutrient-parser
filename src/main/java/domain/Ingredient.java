@@ -1,5 +1,6 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,11 +22,11 @@ public class Ingredient {
 
 	public enum Category {
 		@JsonProperty("011")
-		FUNCTIONAL("011"),
+		@JsonAlias({"010","012","013","014","015"})
+		REPRESENTATIVE("011"),
 		@JsonProperty("021")
-		UNKNOWN("021"),
-		@JsonProperty("023")
-		UNKNOWN_2("023"),
+		@JsonAlias({"020","022","023","024","025"})
+		FUNCTIONAL("021"),
 		@JsonProperty("031")
 		OTHERS("031");
 		@JsonEnumDefaultValue
