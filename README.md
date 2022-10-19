@@ -14,12 +14,14 @@
     - [x] 컨트롤러
         - [x] 멀티쓰레딩, 비동기 처리
 
-## 처리량 개선시도
+## 💨 처리량 개선시도
 ### 환경
 - Macbook Air, M1, 16GB RAM
 
 ### 결과
-<details>
+- `1.x/sec` -> `9.34/sec`으로 개선
+
+<details open>
 <summary><code>ExecutorService</code> 사용</summary>
 
 1. 페이지크기 300, 총 1200개, 20 Threads(Fixed-size) -> 2분 24초 (`8.33/sec`)
