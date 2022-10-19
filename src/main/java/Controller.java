@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import net.Response;
 
@@ -15,64 +18,51 @@ import resolver.JsonArrayResolver;
 public class Controller {
 
 	private static final Sender sender = new Sender();
-	private static final List<Thread> threads = new ArrayList<>();
+	private static final ExecutorService executorService = Executors.newFixedThreadPool(24);
 
 	public static void main(String[] args) throws InterruptedException {
-		List<Product> products = new ArrayList<>();
-		Map<Product, List<Ingredient>> ingredients = new HashMap<>();
-		Map<Product, Information> informations = new HashMap<>();
+		final List<Product> products = new ArrayList<>();
+		final Map<Product, List<Ingredient>> ingredients = new HashMap<>();
+		final Map<Product, Information> informations = new HashMap<>();
 
-		int pageSize = 100;
-		int totalItemCount = 1000;
+		final int pageSize = 300;
+		final int totalItemCount = 300;
+
 		for (int i = 1, page = 1; i <= totalItemCount; i += pageSize, page++) {
 			List<Product> resolvedProducts = getProducts(page, pageSize);
 			products.addAll(resolvedProducts);
 
-			for (Product product : resolvedProducts) {
-				Runnable ingredientFetcher = () -> {
-					List<Ingredient> resolvedIngredients = getIngredientsFor(product);
-					ingredients.put(product, resolvedIngredients);
-				};
-				Runnable informationFetcher = () -> {
-					Information information = getInformationFor(product);
-					informations.put(product, information);
-				};
-
-				runAsThread(ingredientFetcher);
-				runAsThread(informationFetcher);
-				System.out.printf("%d requested (%d/%d)\n", product.getReportNumber(), page, totalItemCount / pageSize);
-			}
-			joinThreads();
-			threads.clear();
+			resolveAdditionalFor(resolvedProducts, ingredients, informations);
+			System.out.printf(" (%d/%d)\n", page, ceilDivide(totalItemCount, pageSize));
 		}
 
-		joinThreads();
-		printProducts(products, ingredients, informations);
+		executorService.shutdown();
+		if (executorService.awaitTermination(60, TimeUnit.MINUTES)) {
+			printProducts(products, ingredients, informations);
+			return;
+		}
+		System.err.println("크롤링에 문제가 발생했습니다");
 	}
 
-	private static void joinThreads() throws InterruptedException {
-		for (Thread thread : threads) {
-			thread.join();
+	private static void resolveAdditionalFor(final List<Product> resolvedProducts,
+		final Map<Product, List<Ingredient>> ingredients, final Map<Product, Information> informations) {
+		for (final Product product : resolvedProducts) {
+			Runnable ingredientFetcher = () -> {
+				List<Ingredient> resolvedIngredients = getIngredientsFor(product);
+				ingredients.put(product, resolvedIngredients);
+			};
+			Runnable informationFetcher = () -> {
+				Information information = getInformationFor(product);
+				informations.put(product, information);
+			};
+
+			executorService.execute(informationFetcher);
+			executorService.execute(ingredientFetcher);
+			System.out.printf("%d requested\n", product.getReportNumber());
 		}
 	}
 
-	private static void runAsThread(Runnable ingredientRunner) {
-		Thread thread = new Thread(ingredientRunner);
-		threads.add(thread);
-		thread.start();
-	}
-
-	private static void printProducts(List<Product> products, Map<Product, List<Ingredient>> ingredients,
-		Map<Product, Information> informations) {
-		for (Product product : products) {
-			System.out.println("product = " + product);
-			System.out.println("ingredients = " + ingredients.get(product));
-			System.out.println("information.effect = " + informations.get(product).getEffect());
-		}
-		System.out.println("products.size() = " + products.size());
-	}
-
-	private static List<Product> getProducts(int page, int pageSize) {
+	private static List<Product> getProducts(final int page, final int pageSize) {
 		try {
 			Response response = sender.retrieveProduct(page, pageSize);
 			JsonArrayResolver<Product> resolver = new JsonArrayResolver<>(response.getBody(), Product.class);
@@ -83,7 +73,7 @@ public class Controller {
 		}
 	}
 
-	private static List<Ingredient> getIngredientsFor(Product product) {
+	private static List<Ingredient> getIngredientsFor(final Product product) {
 		try {
 			Response response = sender.retrieveIngredient(product.getReportNumber());
 			JsonArrayResolver<Ingredient> resolver = new JsonArrayResolver<>(response.getBody(), Ingredient.class);
@@ -96,7 +86,7 @@ public class Controller {
 		}
 	}
 
-	private static Information getInformationFor(Product product) {
+	private static Information getInformationFor(final Product product) {
 		try {
 			Response response = sender.retrieveInformation(product.getLedgerNumber());
 			HtmlTableResolver htmlTableResolver = new HtmlTableResolver(response.getBody());
@@ -110,4 +100,20 @@ public class Controller {
 		}
 	}
 
+	private static void printProducts(final List<Product> products, final Map<Product, List<Ingredient>> ingredients,
+		final Map<Product, Information> informations) {
+		for (final Product product : products) {
+			System.out.println("product = " + product);
+			System.out.println("ingredients = " + ingredients.get(product));
+			System.out.println("information.effect = " + informations.get(product).getEffect());
+		}
+		System.out.println("products.size() = " + products.size());
+	}
+
+	private static int ceilDivide(int number, int divideNumber) {
+		if (number % divideNumber > 0) {
+			return number / divideNumber + 1;
+		}
+		return number / divideNumber;
+	}
 }
