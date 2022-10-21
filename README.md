@@ -8,7 +8,7 @@
     - [x] POST Form
 - [x] 응답을 `HTML`, `JSON`으로 반환 할 수 있다
 - [x] 응답에서 데이터 모델을 만들 수 있다.
-- [ ] 데이터 모델들을 DB에 저장할 수 있다.
+- [ ] <h3>데이터 모델들을 DB에 저장할 수 있다.</h3>
 - [x] `HTML`에서 `기타 정보` 데이터 모델을 만들 수 있다.
 - [x] `JSON`에서 `영양제`와 `원재료` 데이터 모델을 만들 수 있다.
     - [x] 컨트롤러
@@ -19,7 +19,7 @@
 - Macbook Air, M1, 16GB RAM
 
 ### 결과
-- `1.x/sec` -> `9.34/sec`으로 개선
+- `1.x/sec` -> `9.34/sec`으로 개선, 이론적으로 1시간 내에 모든 크롤링을 마칠 수 있음
 
 <details open>
 <summary><code>ExecutorService</code> 사용</summary>
